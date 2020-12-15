@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+    <title>Personal Budget Final</title>
+    <style>
+        .main, .loginorregister {
+            display: none;
+        }
+
+        .progress {
+            width: 500px;
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="loginorregister">Please <a href="/login.html">Login</a> or <a href="/register.html">Register</a></div>
+    <div class="main">
+        <div id="welcome"></div>
+        <button id="logout">Logout</button>
+        <br><br><br>
+        <button id="addBudget">Add Budget</button>
+        <button id="deleteBudget">Delete Budget</button>
+        <button id="editBudget">Edit Budget</button>
+        <button id="addExpense">Add expense</button>
+        <br><br>
+        <div id="budgets">
+            <b>Budgets</b><br><br>
+        </div>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            if(localStorage.getItem("auth") == null) {
+                // Please login or register
+                $(".loginorregister").show();
+            } else {
+                $(".main").show();
+                $("#welcome").text("Welcome back, " + localStorage.getItem("user"));
+                $.post( "/getBudgets", { 
+                    user: localStorage.getItem("user"), 
+                    auth: localStorage.getItem("auth")
+                })
+                .done(function( data ) {
+                    for (var key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            var title = key;
+                            var amount = data[key].amt;
+                            var spent = data[key].spent;
+                            $("#budgets").append("<b>" + title + "</b><br>Monthly Budget: $" + amount + "<br> Currently spent: $" + spent + "<br>Progress Bar:<div class='progress'><div id='" + title + "'></div></div><br><br>");
+                            var percentage = (Number(spent)/ Number(amount)) * 100;
+                            $("#" + title).css("background-color", "green");
+                            $("#" + title).css("height", "30px");
+                            $("#" + title).css("width", percentage + "%");
+
+                        }
+                    }
+                });
+            }
+        });
+
+        $("#logout").click(function() {
+            localStorage.clear();
+            location.reload();
+        });
+
+        $("#addBudget").click(function() {
+            var title = prompt("What would you like to title this budget?");
+            var amt = prompt("How much money should the budget be?");
+            $.post( "/addBudget", { 
+                user: localStorage.getItem("user"), 
+                auth: localStorage.getItem("auth"),
+                title: title,
+                amount: amt,
+
+            })
+            .done(function( data ) {
+                location.reload();
+            });
+        });
+
+        $("#deleteBudget").click(function() {
+            var title = prompt("What is the title of the budget you are deleting?");
+            $.post( "/deleteBudget", { 
+                user: localStorage.getItem("user"), 
+                auth: localStorage.getItem("auth"),
+                title: title
+
+            })
+            .done(function( data ) {
+                location.reload();
+            });
+        });
+
+        $("#editBudget").click(function() {
+            var title = prompt("What is the title of the budget you want to edit?");
+            var amount = prompt("How much money should the budget be?");
+            $.post( "/editBudget", { 
+                user: localStorage.getItem("user"), 
+                auth: localStorage.getItem("auth"),
+                title: title,
+                amount: amount
+
+            })
+            .done(function( data ) {
+                location.reload();
+            });
+        });
+
+        $("#addExpense").click(function() {
+            var title = prompt("What is the title of the budget you adding an expense to?");
+            var spent = prompt("How much have you spent? (Can be negative)");
+            $.post( "/addExpense", { 
+                user: localStorage.getItem("user"), 
+                auth: localStorage.getItem("auth"),
+                title: title,
+                spent: spent,
+
+            })
+            .done(function( data ) {
+                location.reload();
+            });
+        });
+
+        
+    </script>
+</body>
+</html>
